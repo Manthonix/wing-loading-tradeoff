@@ -1,6 +1,6 @@
 # Findings
 
-Each result below is stated, evidenced, and assessed. The assessment is deliberately
+These are all results found for my specific case. Each result below is stated, evidenced, and assessed. The assessment is deliberately
 unsparing: some of these are substantial, some are corollaries, and one is a routine
 numerical check reported for completeness. Knowing which is which is part of the work.
 
