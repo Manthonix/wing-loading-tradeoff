@@ -121,7 +121,8 @@ above be stated quantitatively rather than assumed.
 
 ## Repository
 
-- `wing_loading_tradeoff.ipynb` — full analysis, runs top to bottom
+- `wing-loading-tradeoff.ipynb` — full analysis, runs top to bottom
+- `FINDINGS.md` — each result stated and assessed separately
 - `figures/` — the three figures above
 
 Requires NumPy and Matplotlib.
