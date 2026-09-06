@@ -36,7 +36,9 @@ Bending moment is linear in the coefficients. Minimising a quadratic objective s
 to a linear constraint admits a closed-form solution by Lagrange multipliers, so there
 is no solver and nothing to converge. Two structural criteria are compared: root
 bending (moment arm $y$, the peak load carried at the wing–fuselage junction) and
-integrated bending (moment arm $y^2$, a proxy for total spar material).
+integrated bending (moment arm $y^2$, a proxy for total spar material). Span and wing 
+area are held fixed throughout. This differs from the classical treatments, which 
+permit span extension.
 
 ## Validation
 
@@ -90,6 +92,48 @@ in induced drag does not show up to the eye.*
 
 *Coefficient magnitudes fall roughly two decades between $n = 3$ and $n = 13$, which is
 what makes truncation at $n = 7$ defensible.*
+
+## Relation to prior work
+
+I derived this from Anderson's *Introduction to Flight* without knowledge of the
+literature, and found the prior work afterwards. Both constraints I study are
+classical, and both optima are known results.
+
+- **Prandtl (1933)** posed the problem with *integrated* bending moment prescribed as a
+  proxy for structural weight, and obtained the bell distribution. This is the
+  criterion under which my optimiser recovers $A_3/A_1 = -1/3$.
+- **Jones (NACA TN-2249, 1950)** treated the *root* bending moment case and showed the
+  optimum requires a linear spanwise downwash distribution.
+- **Klein and Viswanathan (ZAMP 24, 1973)** independently derived the root-bending
+  solution, building on Prandtl's 1933 paper alone and without knowledge of Jones's
+  work. Their 1975 follow-up extended it to integrated bending moment together with a
+  shear-force constraint.
+- **Pate and German (J. Aircraft 50(3), 2013)** generalised the bending constraints and
+  identify $A_3/A_1$ as the efficient mechanism for shifting load inboard or outboard.
+- **Phillips, Hunsaker and Joo (J. Aircraft 56(2), 2019)** show that different
+  structural constraints — fixed weight and stress, fixed wing loading, fixed maximum
+  deflection — each yield a different optimal $A_3/A_1$, so the bell is specific to one
+  choice of constraint rather than general.
+
+That last point is the observation I had thought was mine. It is not; it is published.
+
+**One important difference in framing.** The classical treatments *release* the span
+constraint: Prandtl's bell gives roughly 11% less induced drag at 22.5% greater span
+for the same structural weight, and Jones and Klein and Viswanathan report comparable
+span-extension trades. This study holds span fixed, so the bell necessarily comes out
+worse than elliptical (1.3333× the induced drag) and the trade-off curve measures the
+drag cost of bending relief at constant span rather than the drag benefit of spending
+that relief on span. The two framings answer different questions and should not be
+compared directly.
+
+**What I believe is my own contribution**, and would welcome correction on: the
+closed-form coefficient $c = C_1^2 / \left(2\sum_{n\geq3} C_n^2/(2n)\right)$ expressed
+as a single quantity applying to any bending criterion, and the observation that
+$c_I = 8$ and $c_K = 3$ exactly. I have not found these stated in this form, but the
+literature is large and I have read a small part of it.
+
+A useful survey is Bragado-Aldana, Lone and Riaz, "On Wings with Non-Elliptic Lift
+Distributions," ICAS 2020.
 
 ## Limitations
 
