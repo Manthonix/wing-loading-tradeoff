@@ -1,172 +1,189 @@
 # Why real wings aren't elliptical
 
-Prandtl's lifting-line theory says the elliptical spanwise lift distribution minimises induced
-drag for a given lift. Almost nothing since the Spitfire uses one. The standard result
-treats the wing as a pure aerodynamic object, but a wing is also a cantilever beam:
-lift generated near the tip has a long moment arm about the root and is structurally
-expensive. The elliptical optimum is optimal only if structure is free.
+Prandtl's lifting-line theory says the elliptical spanwise lift distribution minimises
+induced drag for a given lift and span. Almost nothing since the Spitfire uses one. The
+reason is structural: lift near the tips has a long moment arm about the root, so the
+elliptical wing is only optimal if structure is free.
 
-This project adds a bending-moment constraint to the optimisation and quantifies what
-it costs.
+This project adds a bending constraint to the minimum-induced-drag problem and finds that
+two classical results, Prandtl (1933) and Jones (1950) / Klein and Viswanathan (1973),
+are special cases of a single closed-form law.
 
-![Trade-off under two bending criteria](figures/tradeoff_two_criteria.png)
+![Span extension under bending constraints](figures/span_extension.png)
 
-*The same fractional bending relief costs 8/3 times more induced drag under a
-root-bending constraint than under an integrated one. The choice of structural
-criterion changes the optimal wing.*
+*Induced drag against span for wings carrying the same lift and the same bending as an
+elliptical wing. Each curve flattens at a single inflection point. The $k = 1$ and $k = 2$
+points reproduce Klein and Viswanathan and Prandtl exactly.*
+
+## The result
+
+For a bending constraint with moment arm $|y|^k$, where $k = 1$ is root bending and
+$k = 2$ is Prandtl's integrated bending, the induced-drag penalty at fixed span is
+
+$$
+\frac{C_{D,i}}{C_{D,i,\text{ell}}} = 1 + c(k)\,(1-f)^2, \qquad c(k) = \frac{4(1+k)}{k^2}
+$$
+
+where $f$ is the bending as a fraction of the elliptical wing's.
+
+When span is allowed to grow at fixed bending, this exact value of $c$ makes the drag
+curve's only stationary point a degenerate inflection, located at
+
+$$
+f^* = \frac{2+k}{2(1+k)}, \qquad
+\frac{b}{b_0} = \left(\frac{2(1+k)}{2+k}\right)^{1/k}, \qquad
+\frac{D}{D_\text{ell}} = \frac{2+k}{1+k}\,(f^*)^{2/k}
+$$
+
+| $k$ | criterion | span | induced drag | previously known as |
+|---:|---|---:|---:|---|
+| 1 | root bending | +33.3% | −15.6% | Klein and Viswanathan, 1973 |
+| 1.5 | | +26.8% | −13.0% | |
+| 2 | integrated bending | +22.5% | −11.1% | Prandtl, 1933 |
+| 3 | | +17.0% | −8.6% | |
+
+![c(k) against k](figures/c_of_k.png)
+
+*The trade-off coefficient computed by the optimiser (markers) against the closed form
+(line).*
 
 ## Method
 
-Circulation is represented as a Fourier sine series under the substitution
-$y = -\frac{b}{2}\cos\theta$:
+Circulation is written as a Fourier sine series under $y = -\frac{b}{2}\cos\theta$:
 
-$$\Gamma(\theta) = 2bV_\infty \sum_n A_n \sin n\theta$$
+$$
+\Gamma(\theta) = 2bV_\infty \sum_n A_n \sin n\theta, \qquad
+C_L = \pi\,AR\,A_1, \qquad C_{D,i} = \pi\,AR\sum_n nA_n^2
+$$
 
-Lift is linear in this series, so orthogonality removes every harmonic above the first
-and $C_L = \pi\,AR\,A_1$. Induced drag is quadratic — circulation acting against the
-downwash it generates — so orthogonality leaves the squares instead of cancelling them,
-and the downwash being built from $d\Gamma/dy$ contributes a further factor of $n$:
+Bending is linear in the coefficients, $B = \sum_n A_n C_n$, with influence coefficients
 
-$$C_{D,i} = \pi\,AR \sum_n n A_n^2$$
+$$
+C_n(k) = \int_{\pi/2}^{\pi} \sin n\theta\,(-\cos\theta)^k\sin\theta\,d\theta
+$$
 
-Higher harmonics therefore redistribute lift without adding any, while costing drag in
-proportion to $n$. Elliptical loading wins when nothing else constrains the problem.
+A quadratic objective under linear constraints has a closed-form Lagrange solution,
+$A_n = \lambda C_n/(2n)$, which gives $c = C_1^2 / \sum_{n\geq3} C_n^2/n$.
 
-Bending moment is linear in the coefficients. Minimising a quadratic objective subject
-to a linear constraint admits a closed-form solution by Lagrange multipliers, so there
-is no solver and nothing to converge. Two structural criteria are compared: root
-bending (moment arm $y$, the peak load carried at the wing–fuselage junction) and
-integrated bending (moment arm $y^2$, a proxy for total spar material). Span and wing 
-area are held fixed throughout. This differs from the classical treatments, which 
-permit span extension.
+**Proof of $c(k)$.** Product-to-sum splits $C_n$ into two standard integrals of
+$\cos^k\varphi\cos m\varphi$, which combine into a single ratio of Gamma functions. The
+sum for $c$ then becomes a very-well-poised ${}_5F_4$ series, evaluated by the
+Rogers–Dougall theorem (DLMF 16.4.9):
+
+$$
+\sum_{n\ \text{odd}} \frac{C_n^2}{n\,C_1^2} = \frac{(1+k/2)^2}{1+k}
+\quad\Longrightarrow\quad c(k) = \frac{4(1+k)}{k^2}
+$$
+
+**Span extension.** Bending scales as $L\,b^k f$ and induced drag as $(1+\delta)/b^2$, so
+at fixed bending
+
+$$
+\frac{D}{D_\text{ell}} = \big[1 + c(1-f)^2\big]\,f^{2/k}
+$$
+
+Its derivative contains a quadratic with discriminant $c\,[\,ck^2 - 4(1+k)\,]$, which
+vanishes identically when $c = c(k)$.
 
 ## Validation
 
-Four independent checks, each passing before any new result was computed.
+- **Prandtl recovered.** Under integrated bending at $f = 2/3$ the optimiser returns
+  $A_3/A_1 = -1/3$ with all higher harmonics at machine zero, from code containing no
+  reference to the bell.
+- **$c(k)$, three ways.** From the optimiser with adaptive quadrature (151 harmonics),
+  agreement within $2.5\times10^{-7}$ for $k = 0.5$ to $4$. From the closed-form $C_n$,
+  within $10^{-10}$ of numerical integration. From the hypergeometric series directly,
+  within $10^{-10}$.
+- **Published results reproduced.** $k = 1$ gives span $4/3$ and drag $27/32$; $k = 2$
+  gives span $\sqrt{3/2}$ and drag $8/9$.
+- **Inflection, not minimum.** The numerical derivative of the drag curve is never
+  meaningfully negative (minimum $-8\times10^{-10}$, attributable to truncation).
+- **Mach invariance below $M_{cr}$.** Rescaling $AR \to \beta AR$ leaves every ratio
+  unchanged to $2\times10^{-16}$, since neither objective nor constraint contains
+  $M_\infty$ or $AR$.
 
-1. The bell distribution constructed as a Fourier pair $\{A_1, A_3\} = \{1, -1/3\}$
-   agrees with $\tfrac{4}{3}\sin^3\theta$ to $4\times10^{-16}$.
-2. Bending influence coefficients match an analytic form derived by product-to-sum,
-   $I_n = -(-1)^{(n-1)/2}/(n^2-4)$, to better than $10^{-9}$ across seven harmonics.
-3. Under an integrated-bending constraint at $f = 2/3$, the optimiser returns
-   $A_3/A_1 = -1/3$ with all higher harmonics at machine zero. This is Prandtl's 1933
-   bell-shaped distribution, recovered from code containing no reference to it.
-4. The closed-form trade-off law below reproduces all 62 independently computed sweep
-   rows to machine precision.
+## Two further observations
 
-## Results
+**Exactness matters.** Truncating at seven harmonics gives $c = 8.018$ instead of 8. The
+discriminant turns positive and the model predicts a spurious local minimum at span
+1.31. The exact value is what makes the classical optima inflections.
 
-The induced-drag penalty is exactly quadratic in the bending relief demanded:
+![Truncation trap](figures/truncation_trap.png)
 
-$$\frac{C_{D,i}}{C_{D,i,\text{ell}}} = 1 + c\,(1-f)^2, \qquad
-c = \frac{C_1^2}{2\sum_{n\geq3} C_n^2/(2n)}$$
+**Why the curve flattens where it does.** At $f^*$ the optimal loading meets the tips with
+zero slope. Above $f^*$ the whole wing lifts; below it the tips carry download. This is
+the physical reason the classical designs stop at the inflection, and it explains why
+Prandtl's bell sits at $f = 2/3$: that is $f^*$ for $k = 2$.
 
-where $f$ is bending as a fraction of elliptical. The quadratic form is forced rather
-than fitted: every coefficient scales with $(f-1)$ by a common factor, so the optimum
-travels along a fixed ray in coefficient space, and a quadratic form evaluated along a
-line is a parabola. Marginal cost therefore rises linearly — the first few percent of
-structural relief are nearly free, the last few are ruinous.
+![Optimal loadings at the inflection](figures/optimal_loadings_at_fstar.png)
 
-**The two criteria differ by exactly 8/3.** $c_I = 8$ and $c_K = 3$, both exact.
-Truncating the series at $n = 7$ gives $c_I = 8.018$, converging to $8.000$ by
-$n = 51$; the truncation error is 0.227%.
+## What is proven and what is not
 
-**Prandtl's bell is not a distinguished shape.** Under integrated bending the optimum
-is $A_3/A_1 = f - 1$ exactly, so the optima form a one-parameter family and $f = 2/3$
-is simply where the bell sits. This follows because $K_1 = K_3 = \pi/16$ and $K_n = 0$
-for all $n \geq 5$ — integrated bending is blind to harmonics above the third.
-
-**Under root bending the bell is beaten.** At identical lift and identical root bending
-moment, the bell gives a drag ratio of 1.3333 against the optimum's 1.3207. Root
-bending sees $I_5$ and $I_7$, so the optimum uses harmonics the bell does not have.
-
-Span efficiency falls from 1.000 unconstrained to 0.757 at $f = 0.80$ under root
-bending — squarely within the 0.7–0.85 range real aircraft occupy.
-
-![Loading shapes](figures/loading_shapes.png)
-
-*The bell and the root-bending optimum are visually indistinguishable; a 1% difference
-in induced drag does not show up to the eye.*
-
-![Coefficient collapse](figures/coefficient_collapse.png)
-
-*Coefficient magnitudes fall roughly two decades between $n = 3$ and $n = 13$, which is
-what makes truncation at $n = 7$ defensible.*
+| claim | status |
+|---|---|
+| $c(k) = 4(1+k)/k^2$ | proven, citing the Rogers–Dougall theorem |
+| inflection at $f^*$ for every $k$ | proven, follows from $c(k)$ |
+| zero tip slope at $f^*$ | numerical, at $k = 1, 1.5, 2, 3$ |
+| a physical reason for the form of $c(k)$ | open |
 
 ## Relation to prior work
 
-I derived this from Anderson's *Introduction to Flight* without knowledge of the
-literature, and found the prior work afterwards. Both constraints I study are
-classical, and both optima are known results.
+The minimum-induced-drag problem with structural constraints is classical. Prandtl (1933)
+fixed the moment of inertia of lift, which is the $k = 2$ case here. Jones (1950)
+fixed root bending, the $k = 1$ case, and Klein and Viswanathan (1973) derived the same
+solution independently, later extending it to integrated bending with a shear
+constraint. DeYoung (1979) constrained bending at a prescribed spanwise station; Pate and
+German (2013) constrained root bending at an off-design lift coefficient; Phillips,
+Hunsaker and Joo (2019) showed that different structural models give different optimal
+loadings. Ożański (2024) and Karakhanyan and Katgi (2026) give rigorous mathematical
+treatments of the $k = 2$ problem.
 
-- **Prandtl (1933)** posed the problem with *integrated* bending moment prescribed as a
-  proxy for structural weight, and obtained the bell distribution. This is the
-  criterion under which my optimiser recovers $A_3/A_1 = -1/3$.
-- **Jones (NACA TN-2249, 1950)** treated the *root* bending moment case and showed the
-  optimum requires a linear spanwise downwash distribution.
-- **Klein and Viswanathan (ZAMP 24, 1973)** independently derived the root-bending
-  solution, building on Prandtl's 1933 paper alone and without knowledge of Jones's
-  work. Their 1975 follow-up extended it to integrated bending moment together with a
-  shear-force constraint.
-- **Pate and German (J. Aircraft 50(3), 2013)** generalised the bending constraints and
-  identify $A_3/A_1$ as the efficient mechanism for shifting load inboard or outboard.
-- **Phillips, Hunsaker and Joo (J. Aircraft 56(2), 2019)** show that different
-  structural constraints — fixed weight and stress, fixed wing loading, fixed maximum
-  deflection — each yield a different optimal $A_3/A_1$, so the bell is specific to one
-  choice of constraint rather than general.
+To my knowledge, the general coefficient $c(k)$ and the result that the span-extension
+stationary point is a degenerate inflection for every $k$ have not been reported. I would
+welcome correction.
 
-That last point is the observation I had thought was mine. It is not; it is published.
-
-**One important difference in framing.** The classical treatments *release* the span
-constraint: Prandtl's bell gives roughly 11% less induced drag at 22.5% greater span
-for the same structural weight, and Jones and Klein and Viswanathan report comparable
-span-extension trades. This study holds span fixed, so the bell necessarily comes out
-worse than elliptical (1.3333× the induced drag) and the trade-off curve measures the
-drag cost of bending relief at constant span rather than the drag benefit of spending
-that relief on span. The two framings answer different questions and should not be
-compared directly.
-
-**What I believe is my own contribution**, and would welcome correction on: the
-closed-form coefficient $c = C_1^2 / \left(2\sum_{n\geq3} C_n^2/(2n)\right)$ expressed
-as a single quantity applying to any bending criterion, and the observation that
-$c_I = 8$ and $c_K = 3$ exactly. I have not found these stated in this form, but the
-literature is large and I have read a small part of it.
-
-A useful survey is Bragado-Aldana, Lone and Riaz, "On Wings with Non-Elliptic Lift
-Distributions," ICAS 2020.
+I derived the fixed-span problem from Anderson's *Introduction to Flight* before reading
+this literature, and found the prior work afterwards.
 
 ## Limitations
 
-**This optimises the loading, not the wing.** Recovering a planform and twist
-distribution that produce a given $\Gamma(y)$ is the inverse problem and is
-underdetermined — chord and local lift coefficient are two free functions with one
-equation between them, so infinitely many wings produce any target loading.
-
-**Bending moment is a proxy for structural cost, not structural cost.** Whether root or
-integrated bending is the more honest criterion depends on whether the spar is sized by
-peak stress at the root or by total material along the span. This work quantifies one
-side of a trade rather than resolving it.
-
-**Inviscid throughout.** Profile drag depends on local $c_l(y)$, which requires a chord
-distribution, so adding viscosity leaves the loading-level framework entirely.
-
-**Mach-invariant below $M_{cr}$.** Neither the objective nor the constraint contains
-$M_\infty$ or aspect ratio; this was verified numerically by rescaling $AR$ by
-$\beta = \sqrt{1-M_\infty^2}$ up to $M = 0.8$, with drag ratios unchanged to machine
-precision. The wing that produces the loading is not Mach-invariant, and above $M_{cr}$
-shocks break the potential-flow framework the argument rests on.
+- **This optimises the loading, not the wing.** Recovering a planform and twist that
+  produce a given $\Gamma(y)$ is a separate, underdetermined problem.
+- **Bending moment is a proxy for structural cost.** $k = 1$ and $k = 2$ have clear
+  physical meaning; non-integer $k$ is a mathematical interpolation between them.
+- **Lifting-line assumptions throughout:** inviscid, high aspect ratio, unswept, planar
+  wake.
+- **Below $M_{cr}$ only.** Shocks and wave drag break the framework above it.
 
 ## Next steps
 
-Extending to profile drag requires committing to a specific planform and solving the
-inverse problem, which is the natural continuation. Separately, a critical-Mach solver
-validated against measured NACA 2412 pressure data would let the $M_{cr}$ boundary
-above be stated quantitatively rather than assumed.
+Designing twist distributions that realise these loadings and validating them with an
+independent vortex-lattice solver, followed by a physical test of the spanwise centre of
+lift on twisted semi-span models.
+
+## Acknowledgements
+
+This is self-directed work. I used AI assistance (Claude) substantially for derivations,
+code and writing, and have worked through and reproduced every result.
 
 ## Repository
 
 - `wing-loading-tradeoff.ipynb` — full analysis, runs top to bottom
-- `FINDINGS.md` — each result stated and assessed separately
-- `figures/` — the three figures above
+- `figures/` — all figures
+- `summary.pdf` — one-page summary
 
-Requires NumPy and Matplotlib.
+Requires NumPy, SciPy and Matplotlib.
+
+## References
+
+- Anderson, J. D., *Introduction to Flight*, 8th ed.
+- Prandtl, L. (1933), *Zeitschrift für Flugtechnik und Motorluftschiffahrt* 24.
+- Jones, R. T. (1950), NACA TN 2249.
+- Klein, A. and Viswanathan, S. P. (1973), *ZAMP* 24.
+- DeYoung, J. (1979), NASA CR-3140.
+- Pate, D. J. and German, B. J. (2013), *Journal of Aircraft* 50(3).
+- Phillips, W. F., Hunsaker, D. F. and Joo, J. J. (2019), *Journal of Aircraft* 56(2).
+- Ożański, W. S. (2024), *Applied Mathematics and Optimization* 89.
+- Karakhanyan, A. L. and Katgi, Y. (2026), arXiv:2606.12757.
+- Bragado-Aldana, E., Lone, M. and Riaz, A. (2020), ICAS 2020.
+- Olver, F. W. J. et al., *NIST Digital Library of Mathematical Functions*, §16.4.
