@@ -163,8 +163,8 @@ lift on twisted semi-span models.
 
 ## Acknowledgements
 
-This is self-directed work. I used AI assistance (Claude) substantially for derivations,
-code and writing, and have worked through and reproduced every result.
+This is self-directed work. I used AI assistance (Claude) substantially for organization 
+and writing, as well as for verification of derivation, research, and code.
 
 ## Repository
 
