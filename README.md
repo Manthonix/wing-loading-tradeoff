@@ -1,4 +1,5 @@
 # Why real wings aren't elliptical
+[![DOI](https://zenodo.org/badge/1359389100.svg)](https://doi.org/10.5281/zenodo.24394627)
 
 Prandtl's lifting-line theory says the elliptical spanwise lift distribution minimises
 induced drag for a given lift and span. Almost nothing since the Spitfire uses one. The
