@@ -155,15 +155,27 @@ this literature, and found the prior work afterwards.
   wake.
 - **Below $M_{cr}$ only.** Shocks and wave drag break the framework above it.
 
+## Application
+
+The law is applied to a real aircraft in
+[penguin-be-wingtip-retrofit](https://github.com/Manthonix/penguin-be-wingtip-retrofit)
+([DOI 10.5281/zenodo.24393993](https://doi.org/10.5281/zenodo.24393993)): a
+load-alleviated wingtip extension for the Penguin BE survey UAV, screened over 4,890
+designs with lifting-line, vortex-lattice and viscous models.
+
 ## Next steps
 
-Designing twist distributions that realise these loadings and validating them with an
-independent vortex-lattice solver, followed by a physical test of the spanwise centre of
-lift on twisted semi-span models.
+Extending the law to bending at any spanwise station (not only the root), which would
+predict the joiner limit found in the retrofit study, and a physical test of the
+predicted loadings.
+
+## Citation
+
+See `CITATION.cff`, or cite the Zenodo archive (DOI badge above).
 
 ## Acknowledgements
 
-This is self-directed work. I used AI assistance (Claude) substantially for organization 
+This is self-directed work. AI assistance (Claude) was used for organization 
 and writing, as well as for verification of derivation, research, and code.
 
 ## Repository
