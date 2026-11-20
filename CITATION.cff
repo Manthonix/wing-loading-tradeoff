@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "A closed-form induced-drag penalty for power-law bending constraints: c(k) = 4(1+k)/k²"
+authors:
+  - family-names: Rana
+    given-names: Manthan
+    affiliation: "Independent Researcher, Mumbai, India"
+version: 1.0.0
+date-released: 2026-11-20
+license: MIT
+repository-code: "https://github.com/Manthonix/wing-loading-tradeoff"
+keywords:
+  - lifting-line theory
+  - induced drag
+  - wing bending
+  - minimum induced drag
